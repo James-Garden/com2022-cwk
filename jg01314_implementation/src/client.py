@@ -3,13 +3,15 @@ import threading
 import websockets
 import time
 import tkinter as tk
+import tkinter.messagebox
 import signal
+import sys
 from queue import Queue
 
 # Defining constants
 SERVER = ('127.0.0.1', 1234)  # Server hostname and port
-USERNAME = "james_g"              # User login name
-PASSWORD = "garden"
+USERNAME = "james_g"          # User login name
+PASSWORD = "garden"           # User password
 
 
 # The program itself
@@ -134,11 +136,20 @@ class App(tk.Tk):
     def _process_msg(self, data):
         data = data.decode().split(":")
         msg_type, msg = data[0], ''.join(data[1:])
-        if msg_type == "P_GO_OUT":
+        if msg_type == "P_INVITATION":
             self.active_inv_text.config(state='normal')
             self.active_inv_text.delete('0', tk.END)
             self.active_inv_text.insert('end', msg)
             self.active_inv_text.config(state='readonly')
+        elif msg_type == "P_EVENT_EXISTS":
+            tkinter.messagebox.showerror(title="Error", message="There is already an active invitation!")
+        elif msg_type == "P_NO_EVENT":
+            tkinter.messagebox.showerror(title="Error", message="There is no event to respond to!")
+        elif msg_type == "P_EVENT_END":
+            self.active_inv_text.config(state='normal')
+            self.active_inv_text.delete('0', tk.END)
+            self.active_inv_text.insert('end', "No Active Invitation")
+            self.active_inv_text.config(state='disabled')
 
     # Put whatever data needs to be sent into the outbox
     def _send(self, data):
@@ -155,7 +166,9 @@ class App(tk.Tk):
             # Try to start the connection
             print("Connecting to server...")
             async with websockets.connect(f"ws://{SERVER[0]}:{SERVER[1]}") as websocket:
-                print("Connected.")
+                auth = f"P_AUTH:{self.user}:{self.password}".encode()
+                await websocket.send(auth)
+                print("Connected.\n")
                 asyncio.create_task(self._recv_loop(websocket))  # Starting listening loop
                 asyncio.create_task(self._send_loop(websocket))  # Start sending loop
 
@@ -164,19 +177,22 @@ class App(tk.Tk):
                     await asyncio.sleep(0.1)
 
                 print("Disconnecting...")
+                self.close()
 
         except OSError:
-            print(f"Error: Unable to connect to server at {SERVER[0]}:{SERVER[1]} ")
+            print(f"\nError: Unable to connect to server at {SERVER[0]}:{SERVER[1]} ")
             self.close()
 
     async def _recv_loop(self, websocket):
         try:
             while True:
                 data = await websocket.recv()
-                print("Received data:", data.decode(), f"[RAW DATA:{data}]")
                 self.server_log.put(data)
-        except:  # While you shouldn't use bare "except" statements, for some reason ConnectionClosedOK is not valid
-            pass
+        except websockets.ConnectionClosedOK:  # If the connection to the server is closed expectedly
+            self.server_log.put(b"Error: Connection to server lost")
+        except websockets.ConnectionClosed:  # If the connection to the server is closed unexpectedly
+            print("\nError: Connection to server lost")
+            self.server_log.put(b"Error: Connection to server lost")
 
     async def _send_loop(self, websocket):
         try:
@@ -187,8 +203,8 @@ class App(tk.Tk):
                 while not self.outbox.empty():
                     payload = self.outbox.get()
                     await websocket.send(payload)
-        except ConnectionError:
-            pass
+        except websockets.ConnectionClosedOK:
+            self.server_log.put(b"Error: Connection to server lost")
 
 
 def handler():
@@ -196,6 +212,12 @@ def handler():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 3:
+        USERNAME = sys.argv[1]
+        PASSWORD = sys.argv[2]
+    if len(sys.argv) > 3:
+        server_address = sys.argv[3].split(':')
+        SERVER = (str(server_address[0]), int(server_address[1]))
     # If the program is forcibly stopped using CTRL + C in the python shell itself or STOP on an IDE such as pyCharm,
     # the program should close gracefully
     signal.signal(signal.SIGINT, handler)
