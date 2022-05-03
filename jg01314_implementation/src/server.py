@@ -122,8 +122,8 @@ class Server:
                                 # If this is their first response, then this will work
                                 self.clients_awaiting_response.remove(websocket)
                             except ValueError:  # If this is not their first response
-                                for client_response in self.clients_responded:  # Go through the clients that have responded
-
+                                # Go through the clients that have responded
+                                for client_response in self.clients_responded:
                                     if client_response[0] == websocket:  # Once it finds its previous response
                                         self.clients_responded.remove(client_response)  # Remove the old response
                                         break  # Exit the loop
