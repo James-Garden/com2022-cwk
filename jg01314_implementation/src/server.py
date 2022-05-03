@@ -34,7 +34,7 @@ class Server:
         self.welcome_msg = b"Hello!"               # Sent on successful connection
         self.event_state_msg = b"P_EVENT_EXISTS"   # Sent if a user sends an invitation while in event state
         self.not_event_state_msg = b"P_NO_EVENT"   # Sent if a user responds while not in event state
-        self.event_end_msg = b"P_EVENT_END"        # Sent when all responses to an event have been collected
+        self.event_end_msg = "P_EVENT_END"        # Sent when all responses to an event have been collected
         self.own_event_msg = b"P_YOUR_EVENT"       # Sent if a user attempts to respond to their own event
         self.ok_msg = b"P_OK"
         self.current_event_msg = None              # Sent once a user plans an event
@@ -63,7 +63,7 @@ class Server:
 
                 await asyncio.sleep(0.1)  # Wait a short time in case an updated response is still being handled
 
-                responses = "Responses have been collected:\n"
+                responses = ":Responses have been collected:\n"
                 for response in self.clients_responded:
                     sock = response[0]
                     answer = response[1]
@@ -73,6 +73,7 @@ class Server:
                     else:
                         responses += f"{user}: No\n"
 
+                responses = self.event_end_msg + responses
                 websockets.broadcast(self.clients, responses.encode())
 
                 # Reset server state to allow for new invite
