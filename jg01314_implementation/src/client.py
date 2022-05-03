@@ -145,6 +145,8 @@ class App(tk.Tk):
             tkinter.messagebox.showerror(title="Error", message="There is already an active invitation!")
         elif msg_type == "P_NO_EVENT":
             tkinter.messagebox.showerror(title="Error", message="There is no event to respond to!")
+        elif msg_type == "P_YOUR_EVENT":
+            tkinter.messagebox.showerror(title="Error", message="You can't respond to your own event!")
         elif msg_type == "P_EVENT_END":
             self.active_inv_text.config(state='normal')
             self.active_inv_text.delete('0', tk.END)
