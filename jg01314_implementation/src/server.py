@@ -34,9 +34,10 @@ class Server:
         self.welcome_msg = b"Hello!"               # Sent on successful connection
         self.event_state_msg = b"P_EVENT_EXISTS"   # Sent if a user sends an invitation while in event state
         self.not_event_state_msg = b"P_NO_EVENT"   # Sent if a user responds while not in event state
-        self.event_end_msg = "P_EVENT_END"        # Sent when all responses to an event have been collected
+        self.event_end_msg = "P_EVENT_END"         # Sent when all responses to an event have been collected
         self.own_event_msg = b"P_YOUR_EVENT"       # Sent if a user attempts to respond to their own event
-        self.ok_msg = b"P_OK"
+        self.ok_msg = b"P_OK"                      # Sent to host user after they send an invitation
+        self.response_ok_msg = b"P_RESPONSE_OK"    # Sent to a client when their response has been successfully saved
         self.current_event_msg = None              # Sent once a user plans an event
 
     def start(self):
@@ -134,6 +135,7 @@ class Server:
                                 else:                    # If the client responds negatively
                                     response = False
                                 self.clients_responded.append((websocket, response))
+                                await websocket.send(self.response_ok_msg)
 
                 # If the server is *not* in an event state
                 else:
