@@ -209,20 +209,58 @@ class App(tk.Tk):
             self.server_log.put(b"Error: Connection to server lost")
 
 
+class Login(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title = "Log In"
+        self.user_label = tk.Label(text="Username (optional - defaults to james_g)")
+        self.user_entry = tk.Entry(width=15)
+        self.pass_label = tk.Label(text="Username (optional - required with username)")
+        self.pass_entry = tk.Entry(width=15)
+        self.server_label = tk.Label(text="Server Hostname (optional - defaults to localhost:1234)")
+        self.server_entry = tk.Entry(width=20)
+        self.login_button = tk.Button(text="Log In", width=8, height=2, command=self.submit)
+
+        self.user_label.pack()
+        self.user_entry.pack()
+        self.pass_label.pack()
+        self.pass_entry.pack()
+        self.server_label.pack()
+        self.server_entry.pack()
+        self.login_button.pack()
+
+    def submit(self):
+        username = self.user_entry.get()
+        password = self.pass_entry.get()
+        server = self.server_entry.get()
+        if username != "":
+            global USERNAME
+            global PASSWORD
+            USERNAME = username
+            PASSWORD = password
+        if server != "":
+            global SERVER
+            server = server.split(':')
+            try:
+                SERVER = (str(server[0]), int(server[1]))
+            except:
+                server = "".join(server)
+                print(f"Error: {server} is not a valid hostname and/or port combination, defaulting to localhost:1234")
+                SERVER = ('127.0.0.1', 1234)
+        self.destroy()
+
+
 def handler():
     app.close()  # Close the program gracefully
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 3:
-        USERNAME = sys.argv[1]
-        PASSWORD = sys.argv[2]
-    if len(sys.argv) > 3:
-        server_address = sys.argv[3].split(':')
-        SERVER = (str(server_address[0]), int(server_address[1]))
     # If the program is forcibly stopped using CTRL + C in the python shell itself or STOP on an IDE such as pyCharm,
     # the program should close gracefully
     signal.signal(signal.SIGINT, handler)
+    # Show the login prompt
+    login = Login()
+    login.mainloop()
     # Create the app and connect to the server
     app = App(USERNAME, PASSWORD)
     # Show the GUI
