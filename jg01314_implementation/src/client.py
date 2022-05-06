@@ -134,20 +134,21 @@ class App(tk.Tk):
 
     # Do something depending on what the server sends
     def _process_msg(self, data):
-        data = data.decode().split(":")
-        msg_type, msg = data[0], ''.join(data[1:])
-        if msg_type == "P_INVITATION":
+        msg = data.decode()
+        if "P_INVITATION" in msg:
+            msg = msg.replace('P_INVITATION', '')  # Strip protocol command from message
+            msg = msg.lstrip(":")
             self.active_inv_text.config(state='normal')
             self.active_inv_text.delete('0', tk.END)
             self.active_inv_text.insert('end', msg)
             self.active_inv_text.config(state='readonly')
-        elif msg_type == "P_EVENT_EXISTS":
+        elif "P_EVENT_EXISTS" in msg:
             tkinter.messagebox.showerror(title="Error", message="There is already an active invitation!")
-        elif msg_type == "P_NO_EVENT":
+        elif "P_NO_EVENT" in msg:
             tkinter.messagebox.showerror(title="Error", message="There is no event to respond to!")
-        elif msg_type == "P_YOUR_EVENT":
+        elif "P_YOUR_EVENT" in msg:
             tkinter.messagebox.showerror(title="Error", message="You can't respond to your own event!")
-        elif msg_type == "P_EVENT_END":
+        elif "P_EVENT_END" in msg:
             self.active_inv_text.config(state='normal')
             self.active_inv_text.delete('0', tk.END)
             self.active_inv_text.insert('end', "No Active Invitation")
@@ -213,9 +214,10 @@ class Login(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title = "Log In"
+        self.protocol("WM_DELETE_WINDOW", self.close)
         self.user_label = tk.Label(text="Username (optional - defaults to james_g)")
         self.user_entry = tk.Entry(width=15)
-        self.pass_label = tk.Label(text="Username (optional - required with username)")
+        self.pass_label = tk.Label(text="Password (optional - required with username)")
         self.pass_entry = tk.Entry(width=15)
         self.server_label = tk.Label(text="Server Hostname (optional - defaults to localhost:1234)")
         self.server_entry = tk.Entry(width=20)
@@ -228,6 +230,10 @@ class Login(tk.Tk):
         self.server_label.pack()
         self.server_entry.pack()
         self.login_button.pack()
+
+    @staticmethod
+    def close():
+        quit(0)
 
     def submit(self):
         username = self.user_entry.get()
@@ -243,8 +249,8 @@ class Login(tk.Tk):
             server = server.split(':')
             try:
                 SERVER = (str(server[0]), int(server[1]))
-            except:
-                server = "".join(server)
+            except (IndexError, ValueError):
+                server = ":".join(server)
                 print(f"Error: {server} is not a valid hostname and/or port combination, defaulting to localhost:1234")
                 SERVER = ('127.0.0.1', 1234)
         self.destroy()

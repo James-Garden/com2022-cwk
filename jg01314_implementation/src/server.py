@@ -106,16 +106,15 @@ class Server:
             await websocket.send(self.welcome_msg)  # Send greeting message on successful connection
             while True:
                 data = await websocket.recv()
-                data = data.decode().split(":")
-                msg_type = data[0]
+                msg = data.decode()
                 is_host = websocket == self.host_client
                 # If the server is in an event state
                 if self.event_state:
 
-                    if msg_type == "P_GO_OUT":                      # Client has sent an invalid invitation
+                    if "P_GO_OUT" in msg:                      # Client has sent an invalid invitation
                         await websocket.send(self.event_state_msg)  # Send invalid invitation packet (P_EVENT_EXISTS)
                     # Client has sent a potentially valid response
-                    elif msg_type == "P_YES" or msg_type == "P_NO":
+                    elif "P_YES" in msg or "P_NO" in msg:
                         # If the client is the host and tries to respond to their own invitation
                         if is_host:
                             await websocket.send(self.own_event_msg)  # Send invalid response packet (P_YOUR_EVENT)
@@ -130,7 +129,7 @@ class Server:
                                         self.clients_responded.remove(client_response)  # Remove the old response
                                         break  # Exit the loop
                             finally:  # Record the clients response
-                                if msg_type == "P_YES":  # If the client responds affirmatively
+                                if "P_YES" in msg:  # If the client responds affirmatively
                                     response = True
                                 else:                    # If the client responds negatively
                                     response = False
@@ -139,14 +138,14 @@ class Server:
 
                 # If the server is *not* in an event state
                 else:
-                    if msg_type == "P_GO_OUT":                      # Client has sent a valid invitation
+                    if "P_GO_OUT" in msg:                      # Client has sent a valid invitation
                         self.event_state = True                     # Put the server into an event state
                         self.host_client = websocket                # Set this client as the host of the event
-                        self.current_event_msg = ("P_INVITATION:"+":".join(data[1:])).encode()
+                        msg = msg.replace('P_GO_OUT', 'P_INVITATION')
+                        self.current_event_msg = msg.encode()
                         self.clients_responded.append((websocket, True))
-                        is_host = True
                         await websocket.send(self.ok_msg)           # Send ack packet (P_OK)
-                    if msg_type == "P_YES" or msg_type == "P_NO":
+                    elif "P_YES" in msg or "P_NO" in msg:
                         # Inform the user that there is no invitation to answer (P_NO_EVENT)
                         await websocket.send(self.not_event_state_msg)
 
