@@ -55,9 +55,9 @@ class eventPlanner():
             print('Please Accept(Y) or Decline(N) the invitation to: {incoming}')
             input = input('(Y/N)')
             if input == 'Y':
-                self.accept();
+                self.accept()
             if input == 'N':
-                self.decline
+                self.decline()
         
     async def sendLoop(self):
         try:
