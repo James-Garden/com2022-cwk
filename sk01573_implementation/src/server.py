@@ -6,8 +6,8 @@ class server():
     
     def __init__(self):
         
-        self.ip = '0.0.0.0'
-        self.port = '5678'
+        self.ip = '127.0.0.1'
+        self.port = '1234'
         self.allowed = {
             'spyros' : 'kalodikis',
             'markos' : 'doufos',
@@ -21,14 +21,14 @@ class server():
         
         
     
-    async def handler(self, websocket, authorise, eventRequest, response):
+    async def handler(self, websocket):
         while True:
             if not self.auth:
-                self.authorise(self, websocket)
+                await self.authorise(websocket)
             
             else:
-                self.eventRequest(self, websocket)
-                self.response(self)
+                await self.eventRequest(self, websocket)
+                await self.response(self)
     
     
     async def authorise(self, websocket):
@@ -121,7 +121,6 @@ class server():
         self.websocket.close()
         del self
                 
-      
 server = server()
 server.start()
                 

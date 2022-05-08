@@ -7,12 +7,13 @@ class eventPlanner():
     
     
     def __init__(self):
-        self.ip = '192.168.1.7'
+        self.ip = '127.0.0.1'
         self.port = '1234'
         self.user = 'spyros'
         self.password = 'kalodikis'
         self.sendList = Queue()
         self.rcvList = Queue()
+        self.websocket = None
         
         
         asyncio.run(self.startConn())
@@ -76,7 +77,7 @@ class eventPlanner():
     async def rcvLoop(self):
         try:
             while True:
-                packet = await websocket.recv()
+                packet = await self.websocket.recv()
                 self.readIncoming(packet)
             
         except websockets.ConnectionClosed:
@@ -100,8 +101,8 @@ class eventPlanner():
         self.send(msg)
         
     
-    def exit(self):
-        self.websocket.close()
+    async def exit(self):
+        await self.websocket.close()
         print('closed connection successfully')
         
 
