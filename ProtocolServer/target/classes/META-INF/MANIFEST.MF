@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Built-By: User
+Build-Jdk: 11.0.8
+Implementation-Title: ProtocolServer
+Implementation-Version: 1.0.0
+Implementation-Vendor-Id: org.protocol.server
+Implementation-Vendor: Pivotal Software, Inc.
+Implementation-URL: http://projects.spring.io/spring-boot/ProtocolServer
+ /
+Created-By: Maven Integration for Eclipse
+
