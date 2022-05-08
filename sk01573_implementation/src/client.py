@@ -24,7 +24,8 @@ class eventPlanner():
         async with websockets.connect(f"ws://{self.ip}:{self.port}") as self.websocket:
             
             #User needs to be authenticated before connection is established
-            if not self.authUser(self.websocket):
+            authenticated = await self.authUser(self.websocket)
+            if not authenticated == 'True':
                 print("connection failed, user not authenticated")
                 self.exit()
             else:
@@ -65,7 +66,7 @@ class eventPlanner():
                 
                 while not self.sendList.empty():
                     packet = self.sendList.get()
-                    await websocket.send(packet)
+                    await self.websocket.send(packet)
                 else:
                     await asyncio.sleep(1)
                     continue
