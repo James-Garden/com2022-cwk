@@ -5,7 +5,6 @@ import time
 import tkinter as tk
 import tkinter.messagebox
 import signal
-import sys
 from queue import Queue
 
 # Defining constants
