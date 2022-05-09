@@ -6,7 +6,7 @@ class EventProtocol():
 
     def __init__(self):
         self.serverip = "localhost"
-        self.serverport = 8765
+        self.serverport = 1234
         self.username = "james_t"
         self.password = "titman"
         self.websocket = None
@@ -17,10 +17,8 @@ class EventProtocol():
 
     async def authenticate(self, websocket):
         try:
-            details = f"P_AUTH;{self.username};{self.password}".encode()
+            details = f"P_AUTH:{self.username}:{self.password}".encode()
             await websocket.send(details)
-            reply = await websocket.recv()
-            return bool(reply.decode())
         except OSError:
             print("Authentication failed")
             self.exit()
@@ -29,10 +27,10 @@ class EventProtocol():
         try:
             print("Trying to connect")
             async with websockets.connect(f"ws://{self.serverip}:{self.serverport}") as self.websocket:
-                if self.authenticate(self.websocket):
-                    asyncio.create_task(self.sendloop())
-                    asyncio.create_task(self.receiveloop())
-                    print("Connected Succesfully")
+                await self.authenticate(self.websocket)
+                asyncio.create_task(self.sendloop())
+                asyncio.create_task(self.receiveloop())
+                print("Connected Succesfully")
 
         except OSError:
             print("Connection failed")
@@ -40,7 +38,10 @@ class EventProtocol():
 
     def readpacket(self, data):
         data = data.decode()
-        protocolcode, protocoldata = data.split(";")
+        protocol = data.split(":")
+        protocolcode = protocol[0]
+        if len(protocol)>1:
+            protocoldata = protocol[1]
         if protocolcode == "P_INVITATION":
             print(f"/nYou have received an invitation:/n/n{protocoldata}")
             while not(reply == "Y" or reply == "N"):
@@ -82,15 +83,15 @@ class EventProtocol():
         self.sendlist.append(packet.encode())
 
     def invite(self, msg):
-        data = "P_GO_OUT;"+msg
+        data = "P_GO_OUT:"+msg
         self.send(data)
 
     def accept(self):
-        data = "P_YES;True"
+        data = "P_YES:True"
         self.send(data)
 
     def reject(self):
-        data = "P_NO;False"
+        data = "P_NO:False"
         self.send(data)
 
     def exit(self):
