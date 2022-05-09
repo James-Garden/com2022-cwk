@@ -28,7 +28,7 @@ class server():
         print("server ran")
         while True:
             if not self.authorised:
-                auth = websocket.recv()
+                auth = await websocket.recv()
                 auth = auth.decode()
                 auth = auth.split(";")
                 if auth[0] == "P_AUTH":
@@ -85,6 +85,7 @@ class server():
         asyncio.get_event_loop().run_until_complete(startserver)
         asyncio.get_event_loop().run_forever()
 
-s = server()
-s.start()
+if __name__ == "__main__":
+    s = server()
+    s.start()
    
